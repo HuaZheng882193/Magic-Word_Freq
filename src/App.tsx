@@ -5,7 +5,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Cloud, FileText, List, ArrowRight, RotateCcw, PenTool, BookOpen } from 'lucide-react';
+import { Sparkles, Cloud, FileText, List, ArrowRight, RotateCcw, PenTool, BookOpen, BrainCircuit, Link, Type } from 'lucide-react';
 import WordCloud from './components/WordCloud';
 
 // Stop words for 7th grade level Chinese
@@ -41,13 +41,66 @@ function analyzeText(text: string) {
     .sort((a, b) => b.value - a.value);
 }
 
+function analyzeBigrams(text: string) {
+  const segmenter = new Intl.Segmenter('zh-CN', { granularity: 'word' });
+  const segments = Array.from(segmenter.segment(text));
+  
+  const bigramMap = new Map<string, Map<string, number>>();
+  let prevWord: string | null = null;
+  
+  for (const { segment, isWordLike } of segments) {
+    if (isWordLike) {
+      const word = segment.trim();
+      // Skip very long segments or pure numbers
+      if (word.length > 0 && !/^\d+$/.test(word)) {
+        if (prevWord) {
+          if (!bigramMap.has(prevWord)) {
+            bigramMap.set(prevWord, new Map());
+          }
+          const nextWordMap = bigramMap.get(prevWord)!;
+          nextWordMap.set(word, (nextWordMap.get(word) || 0) + 1);
+        }
+        prevWord = word;
+      }
+    } else {
+      // Punctuation resets the previous word so we don't connect across sentences
+      const punctuationRegex = /[。！？；，、\n\r]/;
+      if (punctuationRegex.test(segment)) {
+        prevWord = null;
+      }
+    }
+  }
+  
+  const table: { prev: string; next: string; count: number }[] = [];
+  const dict: Record<string, {text: string; value: number}[]> = {};
+  
+  for (const [prev, nextWords] of bigramMap.entries()) {
+    const sortedNexts = Array.from(nextWords.entries())
+      .map(([text, value]) => ({ text, value }))
+      .sort((a, b) => b.value - a.value);
+    
+    dict[prev] = sortedNexts;
+    for (const {text, value} of sortedNexts) {
+      table.push({ prev, next: text, count: value });
+    }
+  }
+  
+  table.sort((a, b) => b.count - a.count);
+  return { table, dict };
+}
+
 export default function App() {
   const [inputText, setInputText] = useState('');
   const [wordData, setWordData] = useState<{ text: string; value: number }[]>([]);
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [bigramTable, setBigramTable] = useState<{ prev: string; next: string; count: number }[]>([]);
+  const [bigramDict, setBigramDict] = useState<Record<string, {text: string; value: number}[]>>({});
+  const [generatedPoem, setGeneratedPoem] = useState<string[]>([]);
+  const [startWord, setStartWord] = useState('');
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   
   const step2Ref = useRef<HTMLDivElement>(null);
   const step3Ref = useRef<HTMLDivElement>(null);
+  const step4Ref = useRef<HTMLDivElement>(null);
 
   const handleAnalyze = () => {
     if (!inputText.trim()) {
@@ -60,6 +113,11 @@ export default function App() {
       return;
     }
     setWordData(data);
+    
+    const { table, dict } = analyzeBigrams(inputText);
+    setBigramTable(table);
+    setBigramDict(dict);
+    
     setStep(2);
     setTimeout(() => {
       step2Ref.current?.scrollIntoView({ behavior: 'smooth' });
@@ -73,9 +131,43 @@ export default function App() {
     }, 100);
   };
 
+  const handleGeneratePoem = () => {
+    setStep(4);
+    setTimeout(() => {
+      step4Ref.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  const generateNextWord = (currentWord: string) => {
+    if (!bigramDict[currentWord] || bigramDict[currentWord].length === 0) {
+      return null;
+    }
+    return bigramDict[currentWord][0].text;
+  };
+
+  const generatePoemSequence = (start: string) => {
+    if (!start) return;
+    const seq = [start];
+    const visited = new Set<string>([start]);
+    let current = start;
+    
+    for (let i = 0; i < 15; i++) {
+      const next = generateNextWord(current);
+      if (!next || visited.has(next)) break;
+      seq.push(next);
+      visited.add(next);
+      current = next;
+    }
+    setGeneratedPoem(seq);
+  };
+
   const handleReset = () => {
     setInputText('');
     setWordData([]);
+    setBigramTable([]);
+    setBigramDict({});
+    setGeneratedPoem([]);
+    setStartWord('');
     setStep(1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -243,6 +335,140 @@ export default function App() {
               
               <div className="mt-8 text-center text-purple-400 font-medium">
                 <p>✨ 词语出现得越多，在词云里就越大哦！ ✨</p>
+              </div>
+
+              <div className="mt-8 flex justify-center">
+                <button
+                  onClick={handleGeneratePoem}
+                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-purple-400 to-indigo-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-400 hover:scale-105 shadow-xl shadow-purple-200"
+                >
+                  <span className="flex items-center gap-2 text-xl">
+                    <BrainCircuit className="w-6 h-6" />
+                    探索AI写诗预测
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </button>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        {/* Step 4: Bigrams & AI Text Gen */}
+        <AnimatePresence>
+          {step >= 4 && (
+            <motion.section 
+              ref={step4Ref}
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-indigo-100/50 border-4 border-white relative"
+            >
+              <div className="absolute -top-6 -left-6 bg-indigo-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
+                4
+              </div>
+              
+              <h2 className="text-2xl font-bold flex items-center gap-3 text-indigo-500 mb-6">
+                <BrainCircuit className="w-7 h-7" />
+                统计与文本生成：AI是怎么“写”诗的？
+              </h2>
+
+              <div className="text-indigo-600 mb-8 font-medium text-lg leading-relaxed bg-indigo-50/50 p-6 rounded-2xl border-2 border-indigo-100">
+                <strong className="text-xl inline-block mb-2">预测的奥秘：前文决定后文</strong><br/>
+                词语不是孤立存在的。相邻关系是关键，统计相邻字词共同出现的次数，是进行文本预测的基础。我们把这叫做<strong>建立统计表</strong>。
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8 mb-8">
+                {/* Statistics Table */}
+                <div className="bg-white rounded-2xl border-2 border-indigo-100 overflow-hidden shadow-sm">
+                  <div className="bg-indigo-100 px-4 py-3 border-b-2 border-indigo-100 font-bold text-indigo-800 flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    建立统计表 (词语接龙)
+                  </div>
+                  <div className="max-h-64 overflow-y-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-indigo-50/50 text-indigo-600 sticky top-0">
+                        <tr>
+                          <th className="px-4 py-2 font-bold bg-indigo-50/90 backdrop-blur">前字</th>
+                          <th className="px-4 py-2 font-bold bg-indigo-50/90 backdrop-blur">后字</th>
+                          <th className="px-4 py-2 font-bold bg-indigo-50/90 backdrop-blur">出现次数</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {bigramTable.slice(0, 30).map((row, i) => (
+                          <tr key={i} className="border-t border-indigo-50 hover:bg-indigo-50/30 transition-colors">
+                            <td className="px-4 py-2 font-medium text-indigo-900">{row.prev}</td>
+                            <td className="px-4 py-2 font-medium text-indigo-900">{row.next}</td>
+                            <td className="px-4 py-2">
+                              <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md text-sm font-bold">
+                                {row.count}次
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* AI Prediction Generation */}
+                <div className="bg-white rounded-2xl border-2 border-indigo-100 p-6 shadow-sm flex flex-col items-center justify-center text-center">
+                  <h3 className="font-bold text-indigo-800 text-xl mb-6 flex items-center gap-2">
+                    <Link className="w-6 h-6" />
+                    概率连线生成 (让AI试试！)
+                  </h3>
+                  
+                  <div className="w-full max-w-sm flex items-center gap-2 mb-6">
+                    <input 
+                      type="text" 
+                      value={startWord} 
+                      onChange={(e) => setStartWord(e.target.value)}
+                      placeholder="输入一个词作为开头..."
+                      className="flex-1 px-4 py-3 rounded-xl border-2 border-indigo-200 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition-all outline-none"
+                    />
+                    <button 
+                      onClick={() => generatePoemSequence(startWord)}
+                      className="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md shadow-indigo-200 text-lg"
+                    >
+                      生成
+                    </button>
+                  </div>
+
+                  {generatedPoem.length > 0 && (
+                    <div className="bg-indigo-50 text-indigo-900 p-6 rounded-2xl w-full text-left">
+                      <div className="flex flex-wrap items-center gap-2 text-xl font-bold">
+                        {generatedPoem.map((word, idx) => (
+                          <React.Fragment key={idx}>
+                            <motion.span 
+                              initial={{ opacity: 0, scale: 0.5 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: idx * 0.2 }}
+                              className="bg-white px-3 py-1.5 rounded-lg border border-indigo-200 shadow-sm"
+                            >
+                              {word}
+                            </motion.span>
+                            {idx < generatedPoem.length - 1 && (
+                              <motion.span 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: idx * 0.2 + 0.1 }}
+                                className="text-indigo-400"
+                              >
+                                <ArrowRight className="w-5 h-5" />
+                              </motion.span>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      <p className="mt-6 text-sm text-indigo-500 font-medium">
+                        * 根据统计规律，从起点不断预测连线概率最高的下一个词语
+                      </p>
+                    </div>
+                  )}
+                  {generatedPoem.length === 0 && (
+                    <p className="text-indigo-400 text-sm font-medium">
+                      试试输入上面统计表里的“前字”哦！<br/>比如输入示例课文里的「<span className="text-indigo-600 font-bold object-cursor-pointer cursor-pointer" onClick={() => setStartWord('春天')}>春天</span>」
+                    </p>
+                  )}
+                </div>
               </div>
             </motion.section>
           )}
