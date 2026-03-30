@@ -5,8 +5,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Cloud, FileText, List, ArrowRight, RotateCcw, PenTool, BookOpen, BrainCircuit, Link, Type } from 'lucide-react';
+import { Sparkles, Cloud, FileText, List, ArrowRight, RotateCcw, PenTool, BookOpen, BrainCircuit, Link, Type, Compass } from 'lucide-react';
 import WordCloud from './components/WordCloud';
+import SemanticCoding from './components/SemanticCoding';
 
 // Stop words for 7th grade level Chinese
 const STOP_WORDS = new Set([
@@ -96,11 +97,12 @@ export default function App() {
   const [bigramDict, setBigramDict] = useState<Record<string, {text: string; value: number}[]>>({});
   const [generatedPoem, setGeneratedPoem] = useState<string[]>([]);
   const [startWord, setStartWord] = useState('');
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
   
   const step2Ref = useRef<HTMLDivElement>(null);
   const step3Ref = useRef<HTMLDivElement>(null);
   const step4Ref = useRef<HTMLDivElement>(null);
+  const step5Ref = useRef<HTMLDivElement>(null);
 
   const handleAnalyze = () => {
     if (!inputText.trim()) {
@@ -135,6 +137,13 @@ export default function App() {
     setStep(4);
     setTimeout(() => {
       step4Ref.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  const handleGoToSemantic = () => {
+    setStep(5);
+    setTimeout(() => {
+      step5Ref.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
 
@@ -465,10 +474,56 @@ export default function App() {
                   )}
                   {generatedPoem.length === 0 && (
                     <p className="text-indigo-400 text-sm font-medium">
-                      试试输入上面统计表里的“前字”哦！<br/>比如输入示例课文里的「<span className="text-indigo-600 font-bold object-cursor-pointer cursor-pointer" onClick={() => setStartWord('春天')}>春天</span>」
+                      试试输入上面统计表里的“前字”哦！<br/>比如输入示例课文里的「<span className="text-indigo-600 font-bold cursor-pointer" onClick={() => setStartWord('春天')}>春天</span>」
                     </p>
                   )}
                 </div>
+              </div>
+
+              <div className="mt-8 flex justify-center">
+                <button
+                  onClick={handleGoToSemantic}
+                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-orange-400 to-pink-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-400 hover:scale-105 shadow-xl shadow-orange-200"
+                >
+                  <span className="flex items-center gap-2 text-xl">
+                    <Compass className="w-6 h-6" />
+                    进阶：探索语义编码模型
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </button>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        {/* Step 5: Semantic Coding */}
+        <AnimatePresence>
+          {step >= 5 && (
+            <motion.section 
+              ref={step5Ref}
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-orange-100/50 border-4 border-white relative"
+            >
+              <div className="absolute -top-6 -left-6 bg-orange-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
+                5
+              </div>
+              
+              <h2 className="text-2xl font-bold flex items-center gap-3 text-orange-500 mb-8">
+                <Compass className="w-7 h-7" />
+                语义空间：AI是如何“理解”文字的？
+              </h2>
+
+              <SemanticCoding words={wordData} />
+              
+              <div className="mt-12 pt-8 border-t-2 border-orange-50 text-center">
+                <button 
+                  onClick={handleReset}
+                  className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 transition-colors"
+                >
+                  <RotateCcw className="w-5 h-5" />
+                  完成探索，重新开始
+                </button>
               </div>
             </motion.section>
           )}
