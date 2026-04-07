@@ -142,14 +142,14 @@ export default function App() {
     }, 100);
   };
 
-  const handleGoToAttention = () => {
+  const handleGoToSemantic = () => {
     setStep(5);
     setTimeout(() => {
       step5Ref.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
 
-  const handleGoToSemantic = () => {
+  const handleGoToAttention = () => {
     setStep(6);
     setTimeout(() => {
       step6Ref.current?.scrollIntoView({ behavior: 'smooth' });
@@ -491,12 +491,12 @@ export default function App() {
 
               <div className="mt-8 flex justify-center">
                 <button
-                  onClick={handleGoToAttention}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-fuchsia-400 to-pink-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-400 hover:scale-105 shadow-xl shadow-fuchsia-200"
+                  onClick={handleGoToSemantic}
+                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-orange-400 to-pink-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-400 hover:scale-105 shadow-xl shadow-orange-200"
                 >
                   <span className="flex items-center gap-2 text-xl">
-                    <Star className="w-6 h-6" />
-                    继续：揭秘文本生成的“注意力”魔法
+                    <Compass className="w-6 h-6" />
+                    进阶：探索语义编码模型
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </span>
                 </button>
@@ -505,53 +505,17 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {/* Step 5: Attention Mechanism */}
+        {/* Step 5: Semantic Coding */}
         <AnimatePresence>
           {step >= 5 && (
             <motion.section 
               ref={step5Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-fuchsia-100/50 border-4 border-white relative"
-            >
-              <div className="absolute -top-6 -left-6 bg-fuchsia-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
-                5
-              </div>
-              
-              <h2 className="text-2xl font-bold flex items-center gap-3 text-fuchsia-500 mb-8">
-                <Star className="w-7 h-7" />
-                AI小课堂：揭秘文本生成的“注意力”魔法
-              </h2>
-
-              <AttentionMechanism />
-
-              <div className="mt-12 flex justify-center">
-                <button
-                  onClick={handleGoToSemantic}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-orange-400 to-amber-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-400 hover:scale-105 shadow-xl shadow-orange-200"
-                >
-                  <span className="flex items-center gap-2 text-xl">
-                    <Compass className="w-6 h-6" />
-                    终极进阶：探索语义编码模型
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </button>
-              </div>
-            </motion.section>
-          )}
-        </AnimatePresence>
-
-        {/* Step 6: Semantic Coding */}
-        <AnimatePresence>
-          {step >= 6 && (
-            <motion.section 
-              ref={step6Ref}
-              initial={{ opacity: 0, scale: 0.9, y: 50 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
               className="bg-white rounded-[2rem] p-8 shadow-xl shadow-orange-100/50 border-4 border-white relative"
             >
               <div className="absolute -top-6 -left-6 bg-orange-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
-                6
+                5
               </div>
               
               <h2 className="text-2xl font-bold flex items-center gap-3 text-orange-500 mb-8">
@@ -560,8 +524,44 @@ export default function App() {
               </h2>
 
               <SemanticCoding words={wordData} />
+
+              <div className="mt-12 flex justify-center">
+                <button
+                  onClick={handleGoToAttention}
+                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-fuchsia-400 to-pink-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-400 hover:scale-105 shadow-xl shadow-fuchsia-200"
+                >
+                  <span className="flex items-center gap-2 text-xl">
+                    <Star className="w-6 h-6" />
+                    终极进阶：揭秘文本生成的“注意力”魔法
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </button>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        {/* Step 6: Attention Mechanism */}
+        <AnimatePresence>
+          {step >= 6 && (
+            <motion.section 
+              ref={step6Ref}
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-fuchsia-100/50 border-4 border-white relative"
+            >
+              <div className="absolute -top-6 -left-6 bg-fuchsia-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
+                6
+              </div>
               
-              <div className="mt-12 pt-8 border-t-2 border-orange-50 text-center">
+              <h2 className="text-2xl font-bold flex items-center gap-3 text-fuchsia-500 mb-8">
+                <Star className="w-7 h-7" />
+                AI小课堂：揭秘文本生成的“注意力”魔法
+              </h2>
+
+              <AttentionMechanism />
+              
+              <div className="mt-12 pt-8 border-t-2 border-fuchsia-50 text-center">
                 <button 
                   onClick={handleReset}
                   className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 transition-colors"
