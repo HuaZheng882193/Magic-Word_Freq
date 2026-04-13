@@ -100,13 +100,50 @@ export default function App() {
   const [generatedPoem, setGeneratedPoem] = useState<string[]>([]);
   const [startWord, setStartWord] = useState('');
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
+  const [activeNav, setActiveNav] = useState<number>(1);
   
+  const step1Ref = useRef<HTMLDivElement>(null);
   const step2Ref = useRef<HTMLDivElement>(null);
   const step3Ref = useRef<HTMLDivElement>(null);
   const step4Ref = useRef<HTMLDivElement>(null);
   const step5Ref = useRef<HTMLDivElement>(null);
   const step6Ref = useRef<HTMLDivElement>(null);
   const step7Ref = useRef<HTMLDivElement>(null);
+
+  const handleNavClick = (targetStep: 1 | 2 | 3 | 4 | 5 | 6 | 7) => {
+    setActiveNav(targetStep);
+    if (targetStep > step) {
+      setStep(targetStep);
+    }
+    setTimeout(() => {
+      const refs = [null, step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref];
+      refs[targetStep]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 10);
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = Number(entry.target.getAttribute('data-step-id'));
+            if (id) setActiveNav(id);
+          }
+        });
+      },
+      { rootMargin: '-20% 0px -70% 0px' }
+    );
+    
+    const refs = [step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref];
+    refs.forEach((ref, index) => {
+      if (ref.current) {
+        ref.current.setAttribute('data-step-id', String(index + 1));
+        observer.observe(ref.current);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [step]);
 
   const handleAnalyze = () => {
     if (!inputText.trim()) {
@@ -124,44 +161,10 @@ export default function App() {
     setBigramTable(table);
     setBigramDict(dict);
     
-    setStep(2);
+    setStep(7); // Unlock all steps
+    setActiveNav(2);
     setTimeout(() => {
-      step2Ref.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  };
-
-  const handleGenerateCloud = () => {
-    setStep(3);
-    setTimeout(() => {
-      step3Ref.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  };
-
-  const handleGeneratePoem = () => {
-    setStep(4);
-    setTimeout(() => {
-      step4Ref.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  };
-
-  const handleGoToSemantic = () => {
-    setStep(5);
-    setTimeout(() => {
-      step5Ref.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  };
-
-  const handleGoToAttention = () => {
-    setStep(6);
-    setTimeout(() => {
-      step6Ref.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
-  };
-
-  const handleGoToFactors = () => {
-    setStep(7);
-    setTimeout(() => {
-      step7Ref.current?.scrollIntoView({ behavior: 'smooth' });
+      step2Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   };
 
@@ -207,22 +210,53 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#FFF9E6] font-sans text-slate-800 selection:bg-pink-200 pb-20">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b-4 border-pink-100">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-pink-400 to-orange-400 p-2 rounded-2xl shadow-md transform rotate-3">
-              <Sparkles className="w-8 h-8 text-white" />
+      <header className="bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b-4 border-pink-100">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="bg-gradient-to-br from-pink-400 to-orange-400 p-1.5 rounded-xl shadow-md transform rotate-3">
+              <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-500">
-              魔法词频分析器
+            <h1 className="text-xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-500 hidden md:block">
+              AI探索
             </h1>
           </div>
+          
+          <nav className="flex items-center gap-2 overflow-x-auto hide-scrollbar w-full md:w-auto px-2 pb-1 md:pb-0">
+            {[
+              { id: 1 as const, name: '输入', icon: PenTool },
+              { id: 2 as const, name: '词频', icon: FileText },
+              { id: 3 as const, name: '词云', icon: Cloud },
+              { id: 4 as const, name: '概率', icon: BrainCircuit },
+              { id: 5 as const, name: '语义', icon: Compass },
+              { id: 6 as const, name: '机制', icon: Star },
+              { id: 7 as const, name: '生成', icon: Settings2 }
+            ].map(s => {
+               const isActive = step >= s.id;
+               const isCurrent = activeNav === s.id;
+               return (
+                 <button
+                   key={s.id}
+                   onClick={() => handleNavClick(s.id)}
+                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap border-2
+                     ${isActive 
+                        ? (isCurrent ? 'bg-slate-800 text-white border-slate-800 shadow-md scale-105' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400') 
+                        : 'bg-slate-50 text-slate-300 border-transparent hover:bg-slate-100'}`}
+                 >
+                   <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] ${isActive ? (isCurrent ? 'bg-white/20' : 'bg-slate-100 text-slate-500') : 'bg-slate-200 text-slate-400'}`}>
+                     {s.id}
+                   </span>
+                   {s.name}
+                 </button>
+               )
+            })}
+          </nav>
+
           <button 
             onClick={handleReset}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-100 text-amber-700 font-bold hover:bg-amber-200 transition-colors"
+            className="flex shrink-0 items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 font-bold hover:bg-amber-200 transition-colors shadow-sm text-sm"
           >
             <RotateCcw className="w-4 h-4" />
-            重新开始
+            <span className="hidden md:inline">重置</span>
           </button>
         </div>
       </header>
@@ -231,9 +265,10 @@ export default function App() {
         
         {/* Step 1: Input */}
         <motion.section 
+          ref={step1Ref}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[2rem] p-8 shadow-xl shadow-pink-100/50 border-4 border-white relative"
+          className="bg-white rounded-[2rem] p-8 shadow-xl shadow-pink-100/50 border-4 border-white relative scroll-mt-24"
         >
           <div className="absolute -top-6 -left-6 bg-blue-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
             1
@@ -281,7 +316,7 @@ export default function App() {
               ref={step2Ref}
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-emerald-100/50 border-4 border-white relative"
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-emerald-100/50 border-4 border-white relative scroll-mt-24"
             >
               <div className="absolute -top-6 -left-6 bg-emerald-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 2
@@ -320,19 +355,6 @@ export default function App() {
                   ))}
                 </div>
               </div>
-
-              <div className="mt-8 flex justify-center">
-                <button
-                  onClick={handleGenerateCloud}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-pink-400 to-orange-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-400 hover:scale-105 shadow-xl shadow-pink-200"
-                >
-                  <span className="flex items-center gap-2 text-xl">
-                    <Cloud className="w-6 h-6" />
-                    生成魔法词云
-                    <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                  </span>
-                </button>
-              </div>
             </motion.section>
           )}
         </AnimatePresence>
@@ -344,7 +366,7 @@ export default function App() {
               ref={step3Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-purple-100/50 border-4 border-white relative"
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-purple-100/50 border-4 border-white relative scroll-mt-24"
             >
               <div className="absolute -top-6 -left-6 bg-purple-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 3
@@ -363,19 +385,6 @@ export default function App() {
               <div className="mt-8 text-center text-purple-400 font-medium">
                 <p>✨ 词语出现得越多，在词云里就越大哦！ ✨</p>
               </div>
-
-              <div className="mt-8 flex justify-center">
-                <button
-                  onClick={handleGeneratePoem}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-purple-400 to-indigo-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-400 hover:scale-105 shadow-xl shadow-purple-200"
-                >
-                  <span className="flex items-center gap-2 text-xl">
-                    <BrainCircuit className="w-6 h-6" />
-                    探索AI写诗预测
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </button>
-              </div>
             </motion.section>
           )}
         </AnimatePresence>
@@ -387,7 +396,7 @@ export default function App() {
               ref={step4Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-indigo-100/50 border-4 border-white relative"
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-indigo-100/50 border-4 border-white relative scroll-mt-24"
             >
               <div className="absolute -top-6 -left-6 bg-indigo-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 4
@@ -497,19 +506,6 @@ export default function App() {
                   )}
                 </div>
               </div>
-
-              <div className="mt-8 flex justify-center">
-                <button
-                  onClick={handleGoToSemantic}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-orange-400 to-pink-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-400 hover:scale-105 shadow-xl shadow-orange-200"
-                >
-                  <span className="flex items-center gap-2 text-xl">
-                    <Compass className="w-6 h-6" />
-                    进阶：探索语义编码模型
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </button>
-              </div>
             </motion.section>
           )}
         </AnimatePresence>
@@ -521,7 +517,7 @@ export default function App() {
               ref={step5Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-orange-100/50 border-4 border-white relative"
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-orange-100/50 border-4 border-white relative scroll-mt-24"
             >
               <div className="absolute -top-6 -left-6 bg-orange-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 5
@@ -533,19 +529,6 @@ export default function App() {
               </h2>
 
               <SemanticCoding words={wordData} />
-
-              <div className="mt-12 flex justify-center">
-                <button
-                  onClick={handleGoToAttention}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-fuchsia-400 to-pink-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fuchsia-400 hover:scale-105 shadow-xl shadow-fuchsia-200"
-                >
-                  <span className="flex items-center gap-2 text-xl">
-                    <Star className="w-6 h-6" />
-                    终极进阶：揭秘文本生成的“注意力”魔法
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </button>
-              </div>
             </motion.section>
           )}
         </AnimatePresence>
@@ -557,7 +540,7 @@ export default function App() {
               ref={step6Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-fuchsia-100/50 border-4 border-white relative"
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-fuchsia-100/50 border-4 border-white relative scroll-mt-24"
             >
               <div className="absolute -top-6 -left-6 bg-fuchsia-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 6
@@ -569,19 +552,6 @@ export default function App() {
               </h2>
 
               <AttentionMechanism />
-              
-              <div className="mt-12 pt-8 border-t-2 border-fuchsia-50 text-center">
-                <button 
-                  onClick={handleGoToFactors}
-                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-cyan-400 to-blue-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-400 hover:scale-105 shadow-xl shadow-cyan-200"
-                >
-                  <span className="flex items-center gap-2 text-xl">
-                    <Sparkles className="w-6 h-6" />
-                    揭秘AI：影响文本生成的关键因素
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </button>
-              </div>
             </motion.section>
           )}
         </AnimatePresence>
@@ -593,7 +563,7 @@ export default function App() {
               ref={step7Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-cyan-100/50 border-4 border-white relative"
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-cyan-100/50 border-4 border-white relative scroll-mt-24"
             >
               <div className="absolute -top-6 -left-6 bg-cyan-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 7
@@ -605,16 +575,6 @@ export default function App() {
               </h2>
 
               <TextGenerationFactors />
-              
-              <div className="mt-12 pt-8 border-t-2 border-cyan-50 text-center flex justify-center gap-4">
-                <button 
-                  onClick={handleReset}
-                  className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 transition-colors"
-                >
-                  <RotateCcw className="w-5 h-5" />
-                  完成探索，重新开始
-                </button>
-              </div>
             </motion.section>
           )}
         </AnimatePresence>
