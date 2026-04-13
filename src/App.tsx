@@ -5,10 +5,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Cloud, FileText, List, ArrowRight, RotateCcw, PenTool, BookOpen, BrainCircuit, Link, Type, Compass, Star } from 'lucide-react';
+import { Sparkles, Cloud, FileText, List, ArrowRight, RotateCcw, PenTool, BookOpen, BrainCircuit, Link, Type, Compass, Star, Settings2 } from 'lucide-react';
 import WordCloud from './components/WordCloud';
 import SemanticCoding from './components/SemanticCoding';
 import AttentionMechanism from './components/AttentionMechanism';
+import TextGenerationFactors from './components/TextGenerationFactors';
 
 // Stop words for 7th grade level Chinese
 const STOP_WORDS = new Set([
@@ -98,13 +99,14 @@ export default function App() {
   const [bigramDict, setBigramDict] = useState<Record<string, {text: string; value: number}[]>>({});
   const [generatedPoem, setGeneratedPoem] = useState<string[]>([]);
   const [startWord, setStartWord] = useState('');
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
   
   const step2Ref = useRef<HTMLDivElement>(null);
   const step3Ref = useRef<HTMLDivElement>(null);
   const step4Ref = useRef<HTMLDivElement>(null);
   const step5Ref = useRef<HTMLDivElement>(null);
   const step6Ref = useRef<HTMLDivElement>(null);
+  const step7Ref = useRef<HTMLDivElement>(null);
 
   const handleAnalyze = () => {
     if (!inputText.trim()) {
@@ -153,6 +155,13 @@ export default function App() {
     setStep(6);
     setTimeout(() => {
       step6Ref.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  const handleGoToFactors = () => {
+    setStep(7);
+    setTimeout(() => {
+      step7Ref.current?.scrollIntoView({ behavior: 'smooth' });
     }, 100);
   };
 
@@ -562,6 +571,42 @@ export default function App() {
               <AttentionMechanism />
               
               <div className="mt-12 pt-8 border-t-2 border-fuchsia-50 text-center">
+                <button 
+                  onClick={handleGoToFactors}
+                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-cyan-400 to-blue-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-400 hover:scale-105 shadow-xl shadow-cyan-200"
+                >
+                  <span className="flex items-center gap-2 text-xl">
+                    <Sparkles className="w-6 h-6" />
+                    揭秘AI：影响文本生成的关键因素
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </button>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        {/* Step 7: Text Generation Factors */}
+        <AnimatePresence>
+          {step >= 7 && (
+            <motion.section 
+              ref={step7Ref}
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-cyan-100/50 border-4 border-white relative"
+            >
+              <div className="absolute -top-6 -left-6 bg-cyan-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
+                7
+              </div>
+              
+              <h2 className="text-2xl font-bold flex items-center gap-3 text-cyan-500 mb-8">
+                <Settings2 className="w-7 h-7" />
+                揭秘AI：影响文本生成的关键因素
+              </h2>
+
+              <TextGenerationFactors />
+              
+              <div className="mt-12 pt-8 border-t-2 border-cyan-50 text-center flex justify-center gap-4">
                 <button 
                   onClick={handleReset}
                   className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 transition-colors"
