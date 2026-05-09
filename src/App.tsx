@@ -11,6 +11,7 @@ import SemanticCoding from './components/SemanticCoding';
 import AttentionMechanism from './components/AttentionMechanism';
 import TextGenerationFactors from './components/TextGenerationFactors';
 import ImageFeatureExtraction from './components/ImageFeatureExtraction';
+import ImageStyleTransfer from './components/ImageStyleTransfer';
 
 // Stop words for 7th grade level Chinese
 const STOP_WORDS = new Set([
@@ -100,7 +101,7 @@ export default function App() {
   const [bigramDict, setBigramDict] = useState<Record<string, {text: string; value: number}[]>>({});
   const [generatedPoem, setGeneratedPoem] = useState<string[]>([]);
   const [startWord, setStartWord] = useState('');
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9>(1);
   const [activeNav, setActiveNav] = useState<number>(1);
   
   const step1Ref = useRef<HTMLDivElement>(null);
@@ -111,14 +112,15 @@ export default function App() {
   const step6Ref = useRef<HTMLDivElement>(null);
   const step7Ref = useRef<HTMLDivElement>(null);
   const step8Ref = useRef<HTMLDivElement>(null);
+  const step9Ref = useRef<HTMLDivElement>(null);
 
-  const handleNavClick = (targetStep: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8) => {
+  const handleNavClick = (targetStep: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9) => {
     setActiveNav(targetStep);
     if (targetStep > step) {
       setStep(targetStep);
     }
     setTimeout(() => {
-      const refs = [null, step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref];
+      const refs = [null, step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref];
       refs[targetStep]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 10);
   };
@@ -136,7 +138,7 @@ export default function App() {
       { rootMargin: '-20% 0px -70% 0px' }
     );
     
-    const refs = [step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref];
+    const refs = [step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref];
     refs.forEach((ref, index) => {
       if (ref.current) {
         ref.current.setAttribute('data-step-id', String(index + 1));
@@ -163,7 +165,7 @@ export default function App() {
     setBigramTable(table);
     setBigramDict(dict);
     
-    setStep(8); // Unlock all steps
+    setStep(9); // Unlock all steps
     setActiveNav(2);
     setTimeout(() => {
       step2Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -232,7 +234,8 @@ export default function App() {
               { id: 5 as const, name: '语义', icon: Compass },
               { id: 6 as const, name: '机制', icon: Star },
               { id: 7 as const, name: '生成', icon: Settings2 },
-              { id: 8 as const, name: '视界', icon: ImageIcon }
+              { id: 8 as const, name: '视界', icon: ImageIcon },
+              { id: 9 as const, name: '风格', icon: ImageIcon }
             ].map(s => {
                const isActive = step >= s.id;
                const isCurrent = activeNav === s.id;
@@ -601,6 +604,29 @@ export default function App() {
               </h2>
 
               <ImageFeatureExtraction />
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        {/* Step 9: Image Style Transfer */}
+        <AnimatePresence>
+          {step >= 9 && (
+            <motion.section 
+              ref={step9Ref}
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-violet-100/50 border-4 border-white relative scroll-mt-24"
+            >
+              <div className="absolute -top-6 -left-6 bg-violet-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
+                9
+              </div>
+              
+              <h2 className="text-2xl font-bold flex items-center gap-3 text-violet-500 mb-8">
+                <ImageIcon className="w-7 h-7" />
+                图像的风格迁移：当AI遇见艺术
+              </h2>
+
+              <ImageStyleTransfer />
             </motion.section>
           )}
         </AnimatePresence>
