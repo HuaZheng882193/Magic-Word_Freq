@@ -12,6 +12,7 @@ import AttentionMechanism from './components/AttentionMechanism';
 import TextGenerationFactors from './components/TextGenerationFactors';
 import ImageFeatureExtraction from './components/ImageFeatureExtraction';
 import ImageStyleTransfer from './components/ImageStyleTransfer';
+import ImageIntelligentGeneration from './components/ImageIntelligentGeneration';
 
 // Stop words for 7th grade level Chinese
 const STOP_WORDS = new Set([
@@ -101,7 +102,7 @@ export default function App() {
   const [bigramDict, setBigramDict] = useState<Record<string, {text: string; value: number}[]>>({});
   const [generatedPoem, setGeneratedPoem] = useState<string[]>([]);
   const [startWord, setStartWord] = useState('');
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>(1);
   const [activeNav, setActiveNav] = useState<number>(1);
   
   const step1Ref = useRef<HTMLDivElement>(null);
@@ -113,14 +114,15 @@ export default function App() {
   const step7Ref = useRef<HTMLDivElement>(null);
   const step8Ref = useRef<HTMLDivElement>(null);
   const step9Ref = useRef<HTMLDivElement>(null);
+  const step10Ref = useRef<HTMLDivElement>(null);
 
-  const handleNavClick = (targetStep: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9) => {
+  const handleNavClick = (targetStep: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10) => {
     setActiveNav(targetStep);
     if (targetStep > step) {
       setStep(targetStep);
     }
     setTimeout(() => {
-      const refs = [null, step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref];
+      const refs = [null, step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref, step10Ref];
       refs[targetStep]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 10);
   };
@@ -138,7 +140,7 @@ export default function App() {
       { rootMargin: '-20% 0px -70% 0px' }
     );
     
-    const refs = [step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref];
+    const refs = [step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref, step10Ref];
     refs.forEach((ref, index) => {
       if (ref.current) {
         ref.current.setAttribute('data-step-id', String(index + 1));
@@ -235,7 +237,8 @@ export default function App() {
               { id: 6 as const, name: '机制', icon: Star },
               { id: 7 as const, name: '生成', icon: Settings2 },
               { id: 8 as const, name: '视界', icon: ImageIcon },
-              { id: 9 as const, name: '风格', icon: ImageIcon }
+              { id: 9 as const, name: '风格', icon: ImageIcon },
+              { id: 10 as const, name: '创造', icon: Sparkles }
             ].map(s => {
                const isActive = step >= s.id;
                const isCurrent = activeNav === s.id;
@@ -627,6 +630,58 @@ export default function App() {
               </h2>
 
               <ImageStyleTransfer />
+              
+              <div className="mt-12 flex justify-center">
+                <button
+                  onClick={() => {
+                    setStep(10);
+                    setTimeout(() => step10Ref.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                  }}
+                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-violet-400 to-emerald-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-400 hover:scale-105 shadow-xl shadow-violet-200"
+                >
+                  <span className="flex items-center gap-2 text-xl">
+                    <Sparkles className="w-6 h-6" />
+                    继续探索：图像智能生成的奥秘
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </button>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        {/* Step 10: Image Intelligent Generation */}
+        <AnimatePresence>
+          {step >= 10 && (
+            <motion.section 
+              ref={step10Ref}
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-emerald-100/50 border-4 border-white relative scroll-mt-24"
+            >
+              <div className="absolute -top-6 -left-6 bg-emerald-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
+                10
+              </div>
+              
+              <h2 className="text-2xl font-bold flex items-center gap-3 text-emerald-500 mb-8">
+                <BrainCircuit className="w-7 h-7" />
+                图像智能生成：探索AI创作背后的奥秘
+              </h2>
+
+              <ImageIntelligentGeneration />
+              
+              <div className="mt-12 pt-8 border-t-2 border-emerald-50 text-center">
+                <button 
+                  onClick={() => {
+                    setStep(1);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 transition-colors"
+                >
+                  <RotateCcw className="w-5 h-5" />
+                  完成所有探索，重新开始
+                </button>
+              </div>
             </motion.section>
           )}
         </AnimatePresence>
