@@ -15,6 +15,8 @@ import ImageStyleTransfer from './components/ImageStyleTransfer';
 import ImageIntelligentGeneration from './components/ImageIntelligentGeneration';
 import TextImageAlignment from './components/TextImageAlignment';
 import VoiceIntelligentGeneration from './components/VoiceIntelligentGeneration';
+import VideoIntelligentGeneration from './components/VideoIntelligentGeneration';
+import { Video } from 'lucide-react';
 
 // Stop words for 7th grade level Chinese
 const STOP_WORDS = new Set([
@@ -104,7 +106,7 @@ export default function App() {
   const [bigramDict, setBigramDict] = useState<Record<string, { text: string; value: number }[]>>({});
   const [generatedPoem, setGeneratedPoem] = useState<string[]>([]);
   const [startWord, setStartWord] = useState('');
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13>(1);
   const [activeNav, setActiveNav] = useState<number>(1);
 
   const step1Ref = useRef<HTMLDivElement>(null);
@@ -119,14 +121,15 @@ export default function App() {
   const step10Ref = useRef<HTMLDivElement>(null);
   const step11Ref = useRef<HTMLDivElement>(null);
   const step12Ref = useRef<HTMLDivElement>(null);
+  const step13Ref = useRef<HTMLDivElement>(null);
 
-  const handleNavClick = (targetStep: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12) => {
+  const handleNavClick = (targetStep: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13) => {
     setActiveNav(targetStep);
     if (targetStep > step) {
       setStep(targetStep);
     }
     setTimeout(() => {
-      const refs = [null, step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref, step10Ref, step11Ref, step12Ref];
+      const refs = [null, step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref, step10Ref, step11Ref, step12Ref, step13Ref];
       refs[targetStep]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 150);
   };
@@ -144,7 +147,7 @@ export default function App() {
       { rootMargin: '-20% 0px -70% 0px' }
     );
 
-    const refs = [step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref, step10Ref, step11Ref, step12Ref];
+    const refs = [step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref, step10Ref, step11Ref, step12Ref, step13Ref];
     refs.forEach((ref, index) => {
       if (ref.current) {
         ref.current.setAttribute('data-step-id', String(index + 1));
@@ -171,7 +174,7 @@ export default function App() {
     setBigramTable(table);
     setBigramDict(dict);
 
-    setStep(12); // Unlock all steps
+    setStep(13); // Unlock all steps
     setActiveNav(2);
     setTimeout(() => {
       step2Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -244,7 +247,8 @@ export default function App() {
               { id: 9 as const, name: '风格', icon: ImageIcon },
               { id: 10 as const, name: '创造', icon: Sparkles },
               { id: 11 as const, name: '图文', icon: ImageIcon },
-              { id: 12 as const, name: '声音', icon: Sparkles }
+              { id: 12 as const, name: '声音', icon: Sparkles },
+              { id: 13 as const, name: '视频', icon: Video }
             ].map(s => {
               const isActive = step >= s.id;
               const isCurrent = activeNav === s.id;
@@ -754,7 +758,46 @@ export default function App() {
 
               <VoiceIntelligentGeneration />
 
-              <div className="mt-12 pt-8 border-t-2 border-violet-50 text-center">
+              <div className="mt-12 flex justify-center">
+                <button
+                  onClick={() => {
+                    setStep(13);
+                    setTimeout(() => step13Ref.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                  }}
+                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-violet-400 to-teal-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-400 hover:scale-105 shadow-xl shadow-violet-250"
+                >
+                  <span className="flex items-center gap-2 text-xl">
+                    <Video className="w-6 h-6" />
+                    继续探索：第15课视频的智能生成
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </button>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        {/* Step 13: Video Intelligent Generation */}
+        <AnimatePresence>
+          {step >= 13 && (
+            <motion.section
+              ref={step13Ref}
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-teal-100/50 border-4 border-white relative scroll-mt-24"
+            >
+              <div className="absolute -top-6 -left-6 bg-teal-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
+                13
+              </div>
+
+              <h2 className="text-2xl font-bold flex items-center gap-3 text-teal-500 mb-8">
+                <Video className="w-7 h-7" />
+                视频的智能生成：AI让静止化为灵动
+              </h2>
+
+              <VideoIntelligentGeneration />
+
+              <div className="mt-12 pt-8 border-t-2 border-teal-50 text-center">
                 <button
                   onClick={() => {
                     setStep(1);
