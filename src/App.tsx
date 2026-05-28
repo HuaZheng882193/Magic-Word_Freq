@@ -13,12 +13,14 @@ import TextGenerationFactors from './components/TextGenerationFactors';
 import ImageFeatureExtraction from './components/ImageFeatureExtraction';
 import ImageStyleTransfer from './components/ImageStyleTransfer';
 import ImageIntelligentGeneration from './components/ImageIntelligentGeneration';
+import TextImageAlignment from './components/TextImageAlignment';
+import VoiceIntelligentGeneration from './components/VoiceIntelligentGeneration';
 
 // Stop words for 7th grade level Chinese
 const STOP_WORDS = new Set([
-  '的', '了', '和', '是', '就', '都', '而', '及', '与', '着', '或', '一个', '没有', 
-  '我们', '你们', '他们', '她', '他', '它', '在', '有', '我', '这', '也', '人', '为', 
-  '上', '不', '到', '说', '要', '去', '你', '会', '把', '好', '让', '那', '很', '看', 
+  '的', '了', '和', '是', '就', '都', '而', '及', '与', '着', '或', '一个', '没有',
+  '我们', '你们', '他们', '她', '他', '它', '在', '有', '我', '这', '也', '人', '为',
+  '上', '不', '到', '说', '要', '去', '你', '会', '把', '好', '让', '那', '很', '看',
   '这', '那', '啊', '呀', '吧', '呢', '吗', '可以', '这个', '那个', '自己', '什么', '如果',
   '但是', '因为', '所以', '就是', '还是', '只是', '一样', '一些', '时候', '出来', '起来',
   '怎么', '那么', '然后', '这种', '那些', '一样', '觉得', '知道', '开始', '现在', '已经',
@@ -29,9 +31,9 @@ function analyzeText(text: string) {
   // Use Intl.Segmenter for Chinese word segmentation
   const segmenter = new Intl.Segmenter('zh-CN', { granularity: 'word' });
   const segments = segmenter.segment(text);
-  
+
   const freqMap = new Map<string, number>();
-  
+
   for (const { segment, isWordLike } of segments) {
     if (isWordLike) {
       const word = segment.trim();
@@ -41,7 +43,7 @@ function analyzeText(text: string) {
       }
     }
   }
-  
+
   return Array.from(freqMap.entries())
     .map(([text, value]) => ({ text, value }))
     .sort((a, b) => b.value - a.value);
@@ -50,10 +52,10 @@ function analyzeText(text: string) {
 function analyzeBigrams(text: string) {
   const segmenter = new Intl.Segmenter('zh-CN', { granularity: 'word' });
   const segments = Array.from(segmenter.segment(text));
-  
+
   const bigramMap = new Map<string, Map<string, number>>();
   let prevWord: string | null = null;
-  
+
   for (const { segment, isWordLike } of segments) {
     if (isWordLike) {
       const word = segment.trim();
@@ -76,21 +78,21 @@ function analyzeBigrams(text: string) {
       }
     }
   }
-  
+
   const table: { prev: string; next: string; count: number }[] = [];
-  const dict: Record<string, {text: string; value: number}[]> = {};
-  
+  const dict: Record<string, { text: string; value: number }[]> = {};
+
   for (const [prev, nextWords] of bigramMap.entries()) {
     const sortedNexts = Array.from(nextWords.entries())
       .map(([text, value]) => ({ text, value }))
       .sort((a, b) => b.value - a.value);
-    
+
     dict[prev] = sortedNexts;
-    for (const {text, value} of sortedNexts) {
+    for (const { text, value } of sortedNexts) {
       table.push({ prev, next: text, count: value });
     }
   }
-  
+
   table.sort((a, b) => b.count - a.count);
   return { table, dict };
 }
@@ -99,12 +101,12 @@ export default function App() {
   const [inputText, setInputText] = useState('');
   const [wordData, setWordData] = useState<{ text: string; value: number }[]>([]);
   const [bigramTable, setBigramTable] = useState<{ prev: string; next: string; count: number }[]>([]);
-  const [bigramDict, setBigramDict] = useState<Record<string, {text: string; value: number}[]>>({});
+  const [bigramDict, setBigramDict] = useState<Record<string, { text: string; value: number }[]>>({});
   const [generatedPoem, setGeneratedPoem] = useState<string[]>([]);
   const [startWord, setStartWord] = useState('');
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12>(1);
   const [activeNav, setActiveNav] = useState<number>(1);
-  
+
   const step1Ref = useRef<HTMLDivElement>(null);
   const step2Ref = useRef<HTMLDivElement>(null);
   const step3Ref = useRef<HTMLDivElement>(null);
@@ -115,16 +117,18 @@ export default function App() {
   const step8Ref = useRef<HTMLDivElement>(null);
   const step9Ref = useRef<HTMLDivElement>(null);
   const step10Ref = useRef<HTMLDivElement>(null);
+  const step11Ref = useRef<HTMLDivElement>(null);
+  const step12Ref = useRef<HTMLDivElement>(null);
 
-  const handleNavClick = (targetStep: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10) => {
+  const handleNavClick = (targetStep: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12) => {
     setActiveNav(targetStep);
     if (targetStep > step) {
       setStep(targetStep);
     }
     setTimeout(() => {
-      const refs = [null, step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref, step10Ref];
+      const refs = [null, step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref, step10Ref, step11Ref, step12Ref];
       refs[targetStep]?.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 10);
+    }, 150);
   };
 
   useEffect(() => {
@@ -139,8 +143,8 @@ export default function App() {
       },
       { rootMargin: '-20% 0px -70% 0px' }
     );
-    
-    const refs = [step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref, step10Ref];
+
+    const refs = [step1Ref, step2Ref, step3Ref, step4Ref, step5Ref, step6Ref, step7Ref, step8Ref, step9Ref, step10Ref, step11Ref, step12Ref];
     refs.forEach((ref, index) => {
       if (ref.current) {
         ref.current.setAttribute('data-step-id', String(index + 1));
@@ -162,12 +166,12 @@ export default function App() {
       return;
     }
     setWordData(data);
-    
+
     const { table, dict } = analyzeBigrams(inputText);
     setBigramTable(table);
     setBigramDict(dict);
-    
-    setStep(9); // Unlock all steps
+
+    setStep(12); // Unlock all steps
     setActiveNav(2);
     setTimeout(() => {
       step2Ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -186,7 +190,7 @@ export default function App() {
     const seq = [start];
     const visited = new Set<string>([start]);
     let current = start;
-    
+
     for (let i = 0; i < 15; i++) {
       const next = generateNextWord(current);
       if (!next || visited.has(next)) break;
@@ -226,7 +230,7 @@ export default function App() {
               AI探索
             </h1>
           </div>
-          
+
           <nav className="flex items-center gap-2 overflow-x-auto hide-scrollbar w-full md:w-auto px-2 pb-1 md:pb-0">
             {[
               { id: 1 as const, name: '输入', icon: PenTool },
@@ -238,29 +242,31 @@ export default function App() {
               { id: 7 as const, name: '生成', icon: Settings2 },
               { id: 8 as const, name: '视界', icon: ImageIcon },
               { id: 9 as const, name: '风格', icon: ImageIcon },
-              { id: 10 as const, name: '创造', icon: Sparkles }
+              { id: 10 as const, name: '创造', icon: Sparkles },
+              { id: 11 as const, name: '图文', icon: ImageIcon },
+              { id: 12 as const, name: '声音', icon: Sparkles }
             ].map(s => {
-               const isActive = step >= s.id;
-               const isCurrent = activeNav === s.id;
-               return (
-                 <button
-                   key={s.id}
-                   onClick={() => handleNavClick(s.id)}
-                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap border-2
-                     ${isActive 
-                        ? (isCurrent ? 'bg-slate-800 text-white border-slate-800 shadow-md scale-105' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400') 
-                        : 'bg-slate-50 text-slate-300 border-transparent hover:bg-slate-100'}`}
-                 >
-                   <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] ${isActive ? (isCurrent ? 'bg-white/20' : 'bg-slate-100 text-slate-500') : 'bg-slate-200 text-slate-400'}`}>
-                     {s.id}
-                   </span>
-                   {s.name}
-                 </button>
-               )
+              const isActive = step >= s.id;
+              const isCurrent = activeNav === s.id;
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => handleNavClick(s.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap border-2
+                     ${isActive
+                      ? (isCurrent ? 'bg-slate-800 text-white border-slate-800 shadow-md scale-105' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400')
+                      : 'bg-slate-50 text-slate-300 border-transparent hover:bg-slate-100'}`}
+                >
+                  <span className={`flex items-center justify-center w-5 h-5 rounded-full text-[10px] ${isActive ? (isCurrent ? 'bg-white/20' : 'bg-slate-100 text-slate-500') : 'bg-slate-200 text-slate-400'}`}>
+                    {s.id}
+                  </span>
+                  {s.name}
+                </button>
+              )
             })}
           </nav>
 
-          <button 
+          <button
             onClick={handleReset}
             className="flex shrink-0 items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 font-bold hover:bg-amber-200 transition-colors shadow-sm text-sm"
           >
@@ -271,9 +277,9 @@ export default function App() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 mt-10 space-y-16">
-        
+
         {/* Step 1: Input */}
-        <motion.section 
+        <motion.section
           ref={step1Ref}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -282,13 +288,13 @@ export default function App() {
           <div className="absolute -top-6 -left-6 bg-blue-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
             1
           </div>
-          
+
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold flex items-center gap-3 text-blue-500">
               <PenTool className="w-7 h-7" />
               输入文章
             </h2>
-            <button 
+            <button
               onClick={loadDemoText}
               className="text-sm font-bold text-blue-400 bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors flex items-center gap-1"
             >
@@ -321,7 +327,7 @@ export default function App() {
         {/* Step 2: Frequency List */}
         <AnimatePresence>
           {step >= 2 && (
-            <motion.section 
+            <motion.section
               ref={step2Ref}
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
@@ -330,7 +336,7 @@ export default function App() {
               <div className="absolute -top-6 -left-6 bg-emerald-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 2
               </div>
-              
+
               <h2 className="text-2xl font-bold flex items-center gap-3 text-emerald-500 mb-6">
                 <FileText className="w-7 h-7" />
                 词频统计结果
@@ -341,14 +347,14 @@ export default function App() {
                   <span className="text-emerald-600 font-bold">一共找到了 {wordData.length} 个不同的词语！</span>
                   <span className="text-emerald-400 text-sm">只显示出现次数最多的前30个词哦</span>
                 </div>
-                
+
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {wordData.slice(0, 30).map((item, index) => (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.05 }}
-                      key={item.text} 
+                      key={item.text}
                       className="flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-emerald-50 hover:border-emerald-200 hover:shadow-md transition-all"
                     >
                       <div className="flex items-center gap-3">
@@ -371,7 +377,7 @@ export default function App() {
         {/* Step 3: Word Cloud */}
         <AnimatePresence>
           {step >= 3 && (
-            <motion.section 
+            <motion.section
               ref={step3Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -380,7 +386,7 @@ export default function App() {
               <div className="absolute -top-6 -left-6 bg-purple-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 3
               </div>
-              
+
               <h2 className="text-2xl font-bold flex items-center gap-3 text-purple-500 mb-6">
                 <Cloud className="w-7 h-7" />
                 魔法词云
@@ -390,7 +396,7 @@ export default function App() {
                 {/* Only pass top 100 words to word cloud to keep it clean */}
                 <WordCloud words={wordData.slice(0, 100)} />
               </div>
-              
+
               <div className="mt-8 text-center text-purple-400 font-medium">
                 <p>✨ 词语出现得越多，在词云里就越大哦！ ✨</p>
               </div>
@@ -401,7 +407,7 @@ export default function App() {
         {/* Step 4: Bigrams & AI Text Gen */}
         <AnimatePresence>
           {step >= 4 && (
-            <motion.section 
+            <motion.section
               ref={step4Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -410,14 +416,14 @@ export default function App() {
               <div className="absolute -top-6 -left-6 bg-indigo-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 4
               </div>
-              
+
               <h2 className="text-2xl font-bold flex items-center gap-3 text-indigo-500 mb-6">
                 <BrainCircuit className="w-7 h-7" />
                 统计与文本生成：AI是怎么“写”诗的？
               </h2>
 
               <div className="text-indigo-600 mb-8 font-medium text-lg leading-relaxed bg-indigo-50/50 p-6 rounded-2xl border-2 border-indigo-100">
-                <strong className="text-xl inline-block mb-2">预测的奥秘：前文决定后文</strong><br/>
+                <strong className="text-xl inline-block mb-2">预测的奥秘：前文决定后文</strong><br />
                 词语不是孤立存在的。相邻关系是关键，统计相邻字词共同出现的次数，是进行文本预测的基础。我们把这叫做<strong>建立统计表</strong>。
               </div>
 
@@ -460,16 +466,16 @@ export default function App() {
                     <Link className="w-6 h-6" />
                     概率连线生成 (让AI试试！)
                   </h3>
-                  
+
                   <div className="w-full max-w-sm flex items-center gap-2 mb-6">
-                    <input 
-                      type="text" 
-                      value={startWord} 
+                    <input
+                      type="text"
+                      value={startWord}
                       onChange={(e) => setStartWord(e.target.value)}
                       placeholder="输入一个词作为开头..."
                       className="flex-1 px-4 py-3 rounded-xl border-2 border-indigo-200 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition-all outline-none"
                     />
-                    <button 
+                    <button
                       onClick={() => generatePoemSequence(startWord)}
                       className="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md shadow-indigo-200 text-lg"
                     >
@@ -482,7 +488,7 @@ export default function App() {
                       <div className="flex flex-wrap items-center gap-2 text-xl font-bold">
                         {generatedPoem.map((word, idx) => (
                           <React.Fragment key={idx}>
-                            <motion.span 
+                            <motion.span
                               initial={{ opacity: 0, scale: 0.5 }}
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ delay: idx * 0.2 }}
@@ -491,7 +497,7 @@ export default function App() {
                               {word}
                             </motion.span>
                             {idx < generatedPoem.length - 1 && (
-                              <motion.span 
+                              <motion.span
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: idx * 0.2 + 0.1 }}
@@ -510,7 +516,7 @@ export default function App() {
                   )}
                   {generatedPoem.length === 0 && (
                     <p className="text-indigo-400 text-sm font-medium">
-                      试试输入上面统计表里的“前字”哦！<br/>比如输入示例课文里的「<span className="text-indigo-600 font-bold cursor-pointer" onClick={() => setStartWord('春天')}>春天</span>」
+                      试试输入上面统计表里的“前字”哦！<br />比如输入示例课文里的「<span className="text-indigo-600 font-bold cursor-pointer" onClick={() => setStartWord('春天')}>春天</span>」
                     </p>
                   )}
                 </div>
@@ -522,7 +528,7 @@ export default function App() {
         {/* Step 5: Semantic Coding */}
         <AnimatePresence>
           {step >= 5 && (
-            <motion.section 
+            <motion.section
               ref={step5Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -531,7 +537,7 @@ export default function App() {
               <div className="absolute -top-6 -left-6 bg-orange-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 5
               </div>
-              
+
               <h2 className="text-2xl font-bold flex items-center gap-3 text-orange-500 mb-8">
                 <Compass className="w-7 h-7" />
                 语义空间：AI是如何“理解”文字的？
@@ -545,7 +551,7 @@ export default function App() {
         {/* Step 6: Attention Mechanism */}
         <AnimatePresence>
           {step >= 6 && (
-            <motion.section 
+            <motion.section
               ref={step6Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -554,7 +560,7 @@ export default function App() {
               <div className="absolute -top-6 -left-6 bg-fuchsia-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 6
               </div>
-              
+
               <h2 className="text-2xl font-bold flex items-center gap-3 text-fuchsia-500 mb-8">
                 <Star className="w-7 h-7" />
                 AI小课堂：揭秘文本生成的“注意力”魔法
@@ -568,7 +574,7 @@ export default function App() {
         {/* Step 7: Text Generation Factors */}
         <AnimatePresence>
           {step >= 7 && (
-            <motion.section 
+            <motion.section
               ref={step7Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -577,7 +583,7 @@ export default function App() {
               <div className="absolute -top-6 -left-6 bg-cyan-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 7
               </div>
-              
+
               <h2 className="text-2xl font-bold flex items-center gap-3 text-cyan-500 mb-8">
                 <Settings2 className="w-7 h-7" />
                 揭秘AI：影响文本生成的关键因素
@@ -591,7 +597,7 @@ export default function App() {
         {/* Step 8: Image Feature Extraction */}
         <AnimatePresence>
           {step >= 8 && (
-            <motion.section 
+            <motion.section
               ref={step8Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -600,7 +606,7 @@ export default function App() {
               <div className="absolute -top-6 -left-6 bg-rose-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 8
               </div>
-              
+
               <h2 className="text-2xl font-bold flex items-center gap-3 text-rose-500 mb-8">
                 <ImageIcon className="w-7 h-7" />
                 像AI一样“看”世界：图像特征提取概览
@@ -614,7 +620,7 @@ export default function App() {
         {/* Step 9: Image Style Transfer */}
         <AnimatePresence>
           {step >= 9 && (
-            <motion.section 
+            <motion.section
               ref={step9Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -623,15 +629,15 @@ export default function App() {
               <div className="absolute -top-6 -left-6 bg-violet-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 9
               </div>
-              
+
               <h2 className="text-2xl font-bold flex items-center gap-3 text-violet-500 mb-8">
                 <ImageIcon className="w-7 h-7" />
                 图像的风格迁移：当AI遇见艺术
               </h2>
 
               <ImageStyleTransfer />
-              
-              <div className="mt-12 flex justify-center">
+
+              {/* <div className="mt-12 flex justify-center">
                 <button
                   onClick={() => {
                     setStep(10);
@@ -645,7 +651,7 @@ export default function App() {
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </span>
                 </button>
-              </div>
+              </div> */}
             </motion.section>
           )}
         </AnimatePresence>
@@ -653,7 +659,7 @@ export default function App() {
         {/* Step 10: Image Intelligent Generation */}
         <AnimatePresence>
           {step >= 10 && (
-            <motion.section 
+            <motion.section
               ref={step10Ref}
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -662,16 +668,94 @@ export default function App() {
               <div className="absolute -top-6 -left-6 bg-emerald-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
                 10
               </div>
-              
+
               <h2 className="text-2xl font-bold flex items-center gap-3 text-emerald-500 mb-8">
                 <BrainCircuit className="w-7 h-7" />
                 图像智能生成：探索AI创作背后的奥秘
               </h2>
 
               <ImageIntelligentGeneration />
-              
-              <div className="mt-12 pt-8 border-t-2 border-emerald-50 text-center">
-                <button 
+
+              <div className="mt-12 flex justify-center">
+                <button
+                  onClick={() => {
+                    setStep(11);
+                    setTimeout(() => step11Ref.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                  }}
+                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-emerald-400 to-teal-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-400 hover:scale-105 shadow-xl shadow-emerald-250"
+                >
+                  <span className="flex items-center gap-2 text-xl">
+                    <ImageIcon className="w-6 h-6" />
+                    继续探索：第13课图文对齐魔法
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </button>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        {/* Step 11: Text-Image Semantic Alignment */}
+        <AnimatePresence>
+          {step >= 11 && (
+            <motion.section
+              ref={step11Ref}
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-emerald-100/50 border-4 border-white relative scroll-mt-24"
+            >
+              <div className="absolute -top-6 -left-6 bg-emerald-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
+                11
+              </div>
+
+              <h2 className="text-2xl font-bold flex items-center gap-3 text-emerald-500 mb-8">
+                <ImageIcon className="w-7 h-7" />
+                根据文字生成图像：图文对齐与智能搜索
+              </h2>
+
+              <TextImageAlignment />
+
+              <div className="mt-12 flex justify-center">
+                <button
+                  onClick={() => {
+                    setStep(12);
+                    setTimeout(() => step12Ref.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+                  }}
+                  className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-teal-400 to-violet-400 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-400 hover:scale-105 shadow-xl shadow-teal-250"
+                >
+                  <span className="flex items-center gap-2 text-xl">
+                    <Sparkles className="w-6 h-6" />
+                    继续探索：第14课声音的智能生成
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </button>
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+
+        {/* Step 12: Voice Intelligent Generation */}
+        <AnimatePresence>
+          {step >= 12 && (
+            <motion.section
+              ref={step12Ref}
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="bg-white rounded-[2rem] p-8 shadow-xl shadow-violet-100/50 border-4 border-white relative scroll-mt-24"
+            >
+              <div className="absolute -top-6 -left-6 bg-violet-400 text-white w-12 h-12 rounded-full flex items-center justify-center font-black text-2xl shadow-lg transform -rotate-12 border-4 border-white">
+                12
+              </div>
+
+              <h2 className="text-2xl font-bold flex items-center gap-3 text-violet-500 mb-8">
+                <Sparkles className="w-7 h-7" />
+                声音的智能生成：探索声音生成的魔法与伦理
+              </h2>
+
+              <VoiceIntelligentGeneration />
+
+              <div className="mt-12 pt-8 border-t-2 border-violet-50 text-center">
+                <button
                   onClick={() => {
                     setStep(1);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
